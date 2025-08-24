@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NotificationService from '@/services/NotificationService';
+import * as Notifications from 'expo-notifications';
 
 export default function NotificationsSettings() {
   const router = useRouter();
@@ -91,21 +92,24 @@ export default function NotificationsSettings() {
       setRandomNotificationsEnabled(value);
       
       if (value) {
-        // If enabling random notifications, initialize notification service and start
-        const initialized = await NotificationService.init();
-        if (!initialized) {
+        // If enabling random notifications, check current permission status
+        const { status } = await Notifications.getPermissionsAsync();
+        
+        if (status !== 'granted') {
           Alert.alert(
             'Permission Required',
-            'Please enable notifications in your device settings to receive random check-ins.',
+            'Please enable notifications in your device settings to receive notifications from ARMi.',
             [{ text: 'OK' }]
           );
           setRandomNotificationsEnabled(false);
           await AsyncStorage.setItem('notifications_random_enabled', JSON.stringify(false));
         } else {
+          // Permissions are already granted, initialize and start
+          await NotificationService.init();
           await NotificationService.startRandomAppNotifications();
           Alert.alert(
-            'Random Check-ins Enabled',
-            'You will now receive occasional notifications to help you stay engaged with ARMi.',
+            'Push Notifications Enabled',
+            'You will now receive occasional notifications from ARMi to help you stay connected.',
             [{ text: 'OK' }]
           );
         }
@@ -113,8 +117,8 @@ export default function NotificationsSettings() {
         // If disabling random notifications, stop them
         await NotificationService.stopRandomAppNotifications();
         Alert.alert(
-          'Random Check-ins Disabled',
-          'You will no longer receive random engagement notifications from ARMi.',
+          'Push Notifications Disabled',
+          'You will no longer receive occasional notifications from ARMi.',
           [{ text: 'OK' }]
         );
       }
@@ -137,8 +141,8 @@ export default function NotificationsSettings() {
     },
     {
       key: 'random_checkins',
-      title: 'Random Check-ins',
-      subtitle: 'Get occasional reminders to engage with ARMi and stay connected',
+      title: 'Push Notifications',
+      subtitle: 'Get occasional notifications from ARMi and stay connected',
       icon: Bell,
       color: '#EC4899',
       enabled: randomNotificationsEnabled,
