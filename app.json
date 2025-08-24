@@ -2,7 +2,7 @@
   "expo": {
     "name": "ARMi",
     "slug": "armi",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "orientation": "portrait",
 
     "icon": "./assets/images/icon.png",
@@ -17,21 +17,29 @@
     "newArchEnabled": true,
 
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.armi.app",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      },
-      "buildNumber": "2"
+  "supportsTablet": true,
+  "bundleIdentifier": "com.armi.app",
+  "infoPlist": {
+    "ITSAppUsesNonExemptEncryption": false,
+    "NSPhotoLibraryUsageDescription": "ARMi needs access to your photo library to let you pick a profile picture.",
+    "NSCameraUsageDescription": "ARMi needs camera access so you can take a new profile picture.",
+    "NSPhotoLibraryAddUsageDescription": "ARMi may save photos to your library if you choose to keep them."
+  },
+  "buildNumber": "4"
     },
 
     "android": {
-      "package": "com.armi.app",
-      "versionCode": 1,
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#000000"
-      }
+  "package": "com.armi.app",
+  "versionCode": 4,
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/images/icon.png",
+    "backgroundColor": "#000000"
+  },
+  "permissions": [
+    "CAMERA",
+    "READ_EXTERNAL_STORAGE",
+    "WRITE_EXTERNAL_STORAGE"
+  ]
     },
 
     "web": {

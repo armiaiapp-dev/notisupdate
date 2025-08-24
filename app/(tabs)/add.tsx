@@ -1,7 +1,18 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
-import { Plus, Mic, Send, MessageSquarePlus } from 'lucide-react-native';
+import { Platform, ActionSheetIOS, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import React, { useState, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  TextInput, 
+  SafeAreaView,
+  Modal,
+  Image
+} from 'react-native';
+import { Plus, Mic, Send, MessageSquarePlus } from 'lucide-react-native';
 import * as Speech from 'expo-speech';
 import { AIService } from '@/services/AIService';
 import { DatabaseService } from '@/services/DatabaseService';
@@ -129,26 +140,103 @@ export default function AddInteractionScreen() {
   };
 
   const handleAddPhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera roll permissions to add photos.');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0]);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to select photo. Please try again.');
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Choose from Library', 'Take Photo', 'Cancel'],
+          cancelButtonIndex: 2,
+        },
+        async (buttonIndex) => {
+          try {
+            if (buttonIndex === 0) {
+              const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (perm.status !== 'granted') {
+                Alert.alert('Permission needed', 'Enable Photos in Settings to add a picture.');
+                return;
+              }
+              setTimeout(async () => {
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsEditing: true,
+                  aspect: [1, 1],
+                  quality: 0.8,
+                });
+                if (!result.canceled && result.assets?.[0]) {
+                  const asset = result.assets[0];
+                  // existing state update for ADD screen:
+                  setSelectedImage(asset);
+                }
+              }, 50);
+            } else if (buttonIndex === 1) {
+              const perm = await ImagePicker.requestCameraPermissionsAsync();
+              if (perm.status !== 'granted') {
+                Alert.alert('Permission needed', 'Enable Camera in Settings to take a picture.');
+                return;
+              }
+              setTimeout(async () => {
+                const result = await ImagePicker.launchCameraAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsEditing: true,
+                  aspect: [1, 1],
+                  quality: 0.8,
+                });
+                if (!result.canceled && result.assets?.[0]) {
+                  const asset = result.assets[0];
+                  // existing state update for ADD screen:
+                  setSelectedImage(asset);
+                }
+              }, 50);
+            }
+          } catch (e: any) {
+            console.error('Picker error:', e);
+            Alert.alert('Error', 'Failed to open picker. Try again.');
+          }
+        }
+      );
+    } else {
+      Alert.alert('Add Photo', 'Choose an option:', [
+        {
+          text: 'Choose from Library',
+          onPress: async () => {
+            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (perm.status !== 'granted') {
+              Alert.alert('Permission needed', 'Enable Photos in Settings to add a picture.');
+              return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets?.[0]) {
+              const asset = result.assets[0];
+              setSelectedImage(asset);
+            }
+          },
+        },
+        {
+          text: 'Take Photo',
+          onPress: async () => {
+            const perm = await ImagePicker.requestCameraPermissionsAsync();
+            if (perm.status !== 'granted') {
+              Alert.alert('Permission needed', 'Enable Camera in Settings to take a picture.');
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets?.[0]) {
+              const asset = result.assets[0];
+              setSelectedImage(asset);
+            }
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
     }
   };
 
