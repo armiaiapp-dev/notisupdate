@@ -11,6 +11,7 @@ export default function NotificationsSettings() {
   const { isDark } = useTheme();
   
   const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [randomNotificationsEnabled, setRandomNotificationsEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const theme = {
@@ -33,6 +34,11 @@ export default function NotificationsSettings() {
       const saved = await AsyncStorage.getItem('notifications_reminders_enabled');
       if (saved !== null) {
         setRemindersEnabled(JSON.parse(saved));
+      }
+      
+      const randomSaved = await AsyncStorage.getItem('notifications_random_enabled');
+      if (randomSaved !== null) {
+        setRandomNotificationsEnabled(JSON.parse(randomSaved));
       }
     } catch (error) {
       console.error('Error loading notification settings:', error);
@@ -79,6 +85,45 @@ export default function NotificationsSettings() {
     }
   };
 
+  const handleRandomNotificationsToggle = async (value: boolean) => {
+    try {
+      await AsyncStorage.setItem('notifications_random_enabled', JSON.stringify(value));
+      setRandomNotificationsEnabled(value);
+      
+      if (value) {
+        // If enabling random notifications, initialize notification service and start
+        const initialized = await NotificationService.init();
+        if (!initialized) {
+          Alert.alert(
+            'Permission Required',
+            'Please enable notifications in your device settings to receive random check-ins.',
+            [{ text: 'OK' }]
+          );
+          setRandomNotificationsEnabled(false);
+          await AsyncStorage.setItem('notifications_random_enabled', JSON.stringify(false));
+        } else {
+          await NotificationService.startRandomAppNotifications();
+          Alert.alert(
+            'Random Check-ins Enabled',
+            'You will now receive occasional notifications to help you stay engaged with ARMi.',
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        // If disabling random notifications, stop them
+        await NotificationService.stopRandomAppNotifications();
+        Alert.alert(
+          'Random Check-ins Disabled',
+          'You will no longer receive random engagement notifications from ARMi.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Error updating random notification settings:', error);
+      Alert.alert('Error', 'Failed to update notification settings');
+    }
+  };
+
   const notificationOptions = [
     {
       key: 'reminders_manual',
@@ -88,6 +133,16 @@ export default function NotificationsSettings() {
       color: '#3B82F6',
       enabled: remindersEnabled,
       onToggle: handleRemindersToggle,
+      available: true
+    },
+    {
+      key: 'random_checkins',
+      title: 'Random Check-ins',
+      subtitle: 'Get occasional reminders to engage with ARMi and stay connected',
+      icon: Bell,
+      color: '#EC4899',
+      enabled: randomNotificationsEnabled,
+      onToggle: handleRandomNotificationsToggle,
       available: true
     },
     {

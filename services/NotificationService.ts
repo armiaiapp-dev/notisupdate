@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configure how notifications are handled when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -10,8 +11,33 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Random app engagement messages
+const RANDOM_APP_MESSAGES = [
+  {
+    title: "Have you met anyone new recently? 👀",
+    body: "Add them to your profiles so you never forget the important details🧠"
+  },
+  {
+    title: "A quick hello can go a long way 🙂",
+    body: "Double check ARMi profiles so you can get the details right 😼"
+  },
+  {
+    title: "Don't let your roster go quiet 🔔",
+    body: "Check upcoming reminders, add new people, and check in with people you haven't spoken to in awhile."
+  },
+  {
+    title: "Are your profiles up to date🤔",
+    body: "Open ARMi to review notes, update details, and keep your roster fresh."
+  },
+  {
+    title: "Check in with your people 👋",
+    body: "Don't forget the important details — ARMi has your back."
+  }
+];
+
 class NotificationServiceClass {
   private isInitialized = false;
+  private randomNotificationId: string | null = null;
 
   async init() {
     if (this.isInitialized) return;
@@ -48,6 +74,136 @@ class NotificationServiceClass {
     } catch (error) {
       console.error('Failed to initialize notifications:', error);
       return false;
+    }
+  }
+
+  private getRandomFutureDateTime(): Date {
+    const now = new Date();
+    
+    // Random number of days from 1 to 7
+    const randomDays = Math.floor(Math.random() * 7) + 1;
+    
+    // Random hour between 8 AM (8) and 8 PM (20)
+    const randomHour = Math.floor(Math.random() * 12) + 8; // 8-19 (8 AM to 7 PM)
+    
+    // Random minute
+    const randomMinute = Math.floor(Math.random() * 60);
+    
+    const futureDate = new Date();
+    futureDate.setDate(now.getDate() + randomDays);
+    futureDate.setHours(randomHour, randomMinute, 0, 0);
+    
+    // Ensure it's at least 1 hour from now
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    if (futureDate <= oneHourFromNow) {
+      // If the random time is too soon, schedule for tomorrow at the same random time
+      futureDate.setDate(now.getDate() + 1);
+    }
+    
+    return futureDate;
+  }
+
+  async scheduleRandomAppNotification() {
+    try {
+      if (!this.isInitialized) {
+        const initialized = await this.init();
+        if (!initialized) {
+          console.warn('Cannot schedule random notification - notifications not initialized');
+          return null;
+        }
+      }
+
+      // Cancel any existing random notification
+      if (this.randomNotificationId) {
+        await this.cancelNotification(this.randomNotificationId);
+        this.randomNotificationId = null;
+      }
+
+      // Get a random message
+      const randomMessage = RANDOM_APP_MESSAGES[Math.floor(Math.random() * RANDOM_APP_MESSAGES.length)];
+      
+      // Get a random future date/time
+      const scheduledDate = this.getRandomFutureDateTime();
+      
+      console.log('Scheduling random app notification for:', scheduledDate.toLocaleString());
+      console.log('Random message:', randomMessage.title);
+
+      // Create notification content
+      const notificationContent: Notifications.NotificationContentInput = {
+        title: randomMessage.title,
+        body: randomMessage.body,
+        data: {
+          type: 'random_app_engagement',
+        },
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.DEFAULT,
+      };
+      
+      // Schedule the notification
+      const triggerObject = {
+        date: scheduledDate,
+        ...(Platform.OS === 'android' && { channelId: 'reminders' }),
+      };
+      
+      const notificationId = await Notifications.scheduleNotificationAsync({
+        content: notificationContent,
+        trigger: triggerObject,
+      });
+
+      this.randomNotificationId = notificationId;
+      
+      // Store the notification ID for persistence
+      await AsyncStorage.setItem('random_notification_id', notificationId);
+
+      console.log(`Scheduled random app notification ${notificationId} for ${scheduledDate.toLocaleString()}`);
+      
+      return notificationId;
+    } catch (error) {
+      console.error('Failed to schedule random app notification:', error);
+      return null;
+    }
+  }
+
+  async startRandomAppNotifications() {
+    try {
+      console.log('Starting random app notifications...');
+      await this.scheduleRandomAppNotification();
+    } catch (error) {
+      console.error('Failed to start random app notifications:', error);
+    }
+  }
+
+  async stopRandomAppNotifications() {
+    try {
+      console.log('Stopping random app notifications...');
+      
+      // Cancel current random notification if it exists
+      if (this.randomNotificationId) {
+        await this.cancelNotification(this.randomNotificationId);
+        this.randomNotificationId = null;
+      }
+      
+      // Also try to cancel using stored ID
+      const storedId = await AsyncStorage.getItem('random_notification_id');
+      if (storedId) {
+        await this.cancelNotification(storedId);
+        await AsyncStorage.removeItem('random_notification_id');
+      }
+      
+      console.log('Random app notifications stopped');
+    } catch (error) {
+      console.error('Failed to stop random app notifications:', error);
+    }
+  }
+
+  async restoreRandomNotificationId() {
+    try {
+      const storedId = await AsyncStorage.getItem('random_notification_id');
+      if (storedId) {
+        this.randomNotificationId = storedId;
+      }
+    } catch (error) {
+      console.error('Failed to restore random notification ID:', error);
     }
   }
 

@@ -9,6 +9,7 @@ import { DatabaseService } from '@/services/DatabaseService';
 import { router } from 'expo-router';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RootLayout() {
   const { isReady: isFrameworkReady, error } = useFrameworkReady();
@@ -37,19 +38,68 @@ export default function RootLayout() {
   useEffect(() => {
     if (isFrameworkReady && !forceDelay) {
       NotificationService.init();
+      
+      // Initialize random notifications if enabled
+      const initRandomNotifications = async () => {
+        try {
+          const randomEnabled = await AsyncStorage.getItem('notifications_random_enabled');
+          if (randomEnabled === 'true') {
+            await NotificationService.restoreRandomNotificationId();
+            await NotificationService.startRandomAppNotifications();
+          }
+        } catch (error) {
+          console.error('Error initializing random notifications:', error);
+        }
+      };
+      
+      initRandomNotifications();
 
       const responseSubscription = NotificationService.addNotificationResponseListener(
         async (response) => {
-          const { reminderId } = response.notification.request.content.data;
-          if (reminderId) {
+          const { reminderId, type } = response.notification.request.content.data;
+          
+          if (type === 'random_app_engagement') {
+            // User tapped on a random app engagement notification
+            console.log('Random app engagement notification tapped');
+            
+            // Schedule the next random notification if still enabled
+            try {
+              const randomEnabled = await AsyncStorage.getItem('notifications_random_enabled');
+              if (randomEnabled === 'true') {
+                await NotificationService.startRandomAppNotifications();
+              }
+            } catch (error) {
+              console.error('Error scheduling next random notification:', error);
+            }
+            
+            // Navigate to main app
+            router.push('/(tabs)');
+          } else if (reminderId) {
+            // Handle reminder notifications as before
             router.push('/(tabs)/reminders');
           }
         }
       );
 
       const receivedSubscription = NotificationService.addNotificationReceivedListener(
-        (notification) => {
+        async (notification) => {
           console.log('Notification received while app is open:', notification);
+          
+          const { type } = notification.request.content.data;
+          if (type === 'random_app_engagement') {
+            // Random app engagement notification received while app is open
+            console.log('Random app engagement notification received while app is open');
+            
+            // Schedule the next random notification if still enabled
+            try {
+              const randomEnabled = await AsyncStorage.getItem('notifications_random_enabled');
+              if (randomEnabled === 'true') {
+                await NotificationService.startRandomAppNotifications();
+              }
+            } catch (error) {
+              console.error('Error scheduling next random notification:', error);
+            }
+          }
         }
       );
 
