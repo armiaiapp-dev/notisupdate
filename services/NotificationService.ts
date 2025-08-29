@@ -337,6 +337,9 @@ class NotificationServiceClass {
       console.error('Failed to restore random notification IDs:', error);
     }
   }
+
+  private generateRandomFutureDate(): Date {
+    const now = new Date();
     
     // Random number of days from 1 to 7
     const randomDays = Math.floor(Math.random() * 7) + 1;
