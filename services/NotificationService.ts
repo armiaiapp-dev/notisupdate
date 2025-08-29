@@ -338,32 +338,6 @@ class NotificationServiceClass {
     }
   }
 
-  private getRandomFutureDateTime(): Date {
-    const now = new Date();
-    
-    // Random number of days from 1 to 7
-    const randomDays = Math.floor(Math.random() * 7) + 1;
-    
-    // Random hour between 8 AM (8) and 8 PM (20)
-    const randomHour = Math.floor(Math.random() * 12) + 8; // 8-19 (8 AM to 7 PM)
-    
-    // Random minute
-    const randomMinute = Math.floor(Math.random() * 60);
-    
-    const futureDate = new Date();
-    futureDate.setDate(now.getDate() + randomDays);
-    futureDate.setHours(randomHour, randomMinute, 0, 0);
-    
-    // Ensure it's at least 1 hour from now
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-    if (futureDate <= oneHourFromNow) {
-      // If the random time is too soon, schedule for tomorrow at the same random time
-      futureDate.setDate(now.getDate() + 1);
-    }
-    
-    return futureDate;
-  }
-
   async scheduleReminderNotification(reminder: {
     id: number;
     title: string;
