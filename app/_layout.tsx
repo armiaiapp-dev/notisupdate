@@ -44,7 +44,7 @@ export default function RootLayout() {
         try {
           const randomEnabled = await AsyncStorage.getItem('notifications_random_enabled');
           if (randomEnabled === 'true') {
-            await NotificationService.restoreRandomNotificationId();
+            await NotificationService.restoreRandomNotificationIds();
             await NotificationService.startRandomAppNotifications();
           }
         } catch (error) {
@@ -61,17 +61,6 @@ export default function RootLayout() {
           if (type === 'random_app_engagement') {
             // User tapped on a random app engagement notification
             console.log('Random app engagement notification tapped');
-            
-            // Schedule the next random notification if still enabled
-            try {
-              const randomEnabled = await AsyncStorage.getItem('notifications_random_enabled');
-              if (randomEnabled === 'true') {
-                await NotificationService.startRandomAppNotifications();
-              }
-            } catch (error) {
-              console.error('Error scheduling next random notification:', error);
-            }
-            
             // Navigate to main app
             router.push('/(tabs)');
           } else if (reminderId) {
@@ -89,16 +78,6 @@ export default function RootLayout() {
           if (type === 'random_app_engagement') {
             // Random app engagement notification received while app is open
             console.log('Random app engagement notification received while app is open');
-            
-            // Schedule the next random notification if still enabled
-            try {
-              const randomEnabled = await AsyncStorage.getItem('notifications_random_enabled');
-              if (randomEnabled === 'true') {
-                await NotificationService.startRandomAppNotifications();
-              }
-            } catch (error) {
-              console.error('Error scheduling next random notification:', error);
-            }
           }
         }
       );
