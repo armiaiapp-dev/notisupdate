@@ -338,7 +338,7 @@ class NotificationServiceClass {
     }
   }
 
-  private generateRandomFutureDate(): Date {
+  private getRandomFutureDateTime(): Date {
     const now = new Date();
     
     // Random number of days from 1 to 7
@@ -363,7 +363,6 @@ class NotificationServiceClass {
     
     return futureDate;
   }
-
 
   async scheduleReminderNotification(reminder: {
     id: number;
