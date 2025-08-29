@@ -14,7 +14,7 @@ Notifications.setNotificationHandler({
 // Random app engagement messages
 const RANDOM_APP_MESSAGES = [
   {
-    title: "Have you met anyone new recently? 👀",
+    title: "Met anyone new recently? 👀",
     body: "Add them to your profiles so you never forget the important details🧠"
   },
   {
@@ -26,8 +26,8 @@ const RANDOM_APP_MESSAGES = [
     body: "Check upcoming reminders, add new people, and check in with people you haven't spoken to in awhile."
   },
   {
-    title: "Are your profiles up to date🤔",
-    body: "Open ARMi to review notes, update details, and keep your roster fresh."
+    title: "Are your tabs up to date? 🤔",
+    body: "Open ARMi to review notes, update details, set reminders, and keep your roster fresh."
   },
   {
     title: "Check in with your people 👋",
