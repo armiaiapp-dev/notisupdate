@@ -5,7 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Configure how notifications are handled when the app is in the foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -79,102 +80,142 @@ class NotificationServiceClass {
 
   private generateRandomNotificationTimesForToday(): { amTime: Date | null, pmTime: Date | null } {
     const now = new Date();
-    const today = new Date(now);
+    console.log('🔍 TIME DEBUG - Current time:', now.toLocaleString());
+    console.log('🔍 TIME DEBUG - Current time ISO:', now.toISOString());
+    console.log('🔍 TIME DEBUG - Current time Unix:', now.getTime());
     
-    // Generate AM time (10 AM - 1 PM)
+    // Create a fresh date object for today to avoid carrying over time components
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset to start of day
+    console.log('🔍 TIME DEBUG - Today start of day:', today.toLocaleString());
+    
+    // Generate AM time (10:00 AM - 12:59 PM)
     let amTime: Date | null = null;
     const amStartHour = 10; // 10 AM
-    const amEndHour = 13;   // 1 PM
+    const amEndHour = 13;   // 1 PM (exclusive, so up to 12:59 PM)
     
     // Check if we can still schedule an AM notification today
-    const amCutoff = new Date(today);
+    const amCutoff = new Date();
     amCutoff.setHours(amEndHour, 0, 0, 0);
+    console.log('🔍 TIME DEBUG - AM cutoff time:', amCutoff.toLocaleString());
     
     if (now < amCutoff) {
       // We can schedule AM for today
-      const amDate = new Date(today);
+      const amDate = new Date();
       const randomAmHour = Math.floor(Math.random() * (amEndHour - amStartHour)) + amStartHour;
       const randomAmMinute = Math.floor(Math.random() * 60);
       amDate.setHours(randomAmHour, randomAmMinute, 0, 0);
       
+      console.log('🔍 TIME DEBUG - Generated AM time for today:', amDate.toLocaleString());
+      console.log('🔍 TIME DEBUG - AM time ISO:', amDate.toISOString());
+      
       // Ensure it's at least 5 minutes from now
       const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+      console.log('🔍 TIME DEBUG - Five minutes from now:', fiveMinutesFromNow.toLocaleString());
+      
       if (amDate <= fiveMinutesFromNow) {
+        console.log('🔍 TIME DEBUG - AM time too soon, scheduling for tomorrow');
         // If too soon, schedule for next available AM slot
-        const nextDay = new Date(today);
-        nextDay.setDate(today.getDate() + 1);
+        const nextDay = new Date();
+        nextDay.setDate(nextDay.getDate() + 1);
         nextDay.setHours(randomAmHour, randomAmMinute, 0, 0);
         amTime = nextDay;
+        console.log('🔍 TIME DEBUG - Adjusted AM time for tomorrow:', amTime.toLocaleString());
       } else {
         amTime = amDate;
+        console.log('🔍 TIME DEBUG - Final AM time for today:', amTime.toLocaleString());
       }
     } else {
+      console.log('🔍 TIME DEBUG - Past AM cutoff, scheduling AM for tomorrow');
       // Schedule AM for tomorrow
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       const randomAmHour = Math.floor(Math.random() * (amEndHour - amStartHour)) + amStartHour;
       const randomAmMinute = Math.floor(Math.random() * 60);
       tomorrow.setHours(randomAmHour, randomAmMinute, 0, 0);
       amTime = tomorrow;
+      console.log('🔍 TIME DEBUG - Final AM time for tomorrow:', amTime.toLocaleString());
     }
     
-    // Generate PM time (2 PM - 8 PM)
+    // Generate PM time (2:00 PM - 7:59 PM)
     let pmTime: Date | null = null;
     const pmStartHour = 14; // 2 PM
-    const pmEndHour = 20;   // 8 PM
+    const pmEndHour = 20;   // 8 PM (exclusive, so up to 7:59 PM)
     
     // Check if we can still schedule a PM notification today
-    const pmCutoff = new Date(today);
+    const pmCutoff = new Date();
     pmCutoff.setHours(pmEndHour, 0, 0, 0);
+    console.log('🔍 TIME DEBUG - PM cutoff time:', pmCutoff.toLocaleString());
     
     if (now < pmCutoff) {
       // We can schedule PM for today
-      const pmDate = new Date(today);
+      const pmDate = new Date();
       const randomPmHour = Math.floor(Math.random() * (pmEndHour - pmStartHour)) + pmStartHour;
       const randomPmMinute = Math.floor(Math.random() * 60);
       pmDate.setHours(randomPmHour, randomPmMinute, 0, 0);
       
+      console.log('🔍 TIME DEBUG - Generated PM time for today:', pmDate.toLocaleString());
+      console.log('🔍 TIME DEBUG - PM time ISO:', pmDate.toISOString());
+      
       // Ensure it's at least 5 minutes from now
       const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+      
       if (pmDate <= fiveMinutesFromNow) {
+        console.log('🔍 TIME DEBUG - PM time too soon, scheduling for tomorrow');
         // If too soon, schedule for next available PM slot
-        const nextDay = new Date(today);
-        nextDay.setDate(today.getDate() + 1);
+        const nextDay = new Date();
+        nextDay.setDate(nextDay.getDate() + 1);
         nextDay.setHours(randomPmHour, randomPmMinute, 0, 0);
         pmTime = nextDay;
+        console.log('🔍 TIME DEBUG - Adjusted PM time for tomorrow:', pmTime.toLocaleString());
       } else {
         pmTime = pmDate;
+        console.log('🔍 TIME DEBUG - Final PM time for today:', pmTime.toLocaleString());
       }
     } else {
+      console.log('🔍 TIME DEBUG - Past PM cutoff, scheduling PM for tomorrow');
       // Schedule PM for tomorrow
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       const randomPmHour = Math.floor(Math.random() * (pmEndHour - pmStartHour)) + pmStartHour;
       const randomPmMinute = Math.floor(Math.random() * 60);
       tomorrow.setHours(randomPmHour, randomPmMinute, 0, 0);
       pmTime = tomorrow;
+      console.log('🔍 TIME DEBUG - Final PM time for tomorrow:', pmTime.toLocaleString());
     }
     
     // Ensure AM and PM times are at least 30 minutes apart if on the same day
     if (amTime && pmTime && amTime.toDateString() === pmTime.toDateString()) {
+      console.log('🔍 TIME DEBUG - Both notifications on same day, checking spacing');
       const timeDifference = Math.abs(pmTime.getTime() - amTime.getTime());
       const thirtyMinutes = 30 * 60 * 1000;
+      console.log('🔍 TIME DEBUG - Time difference (minutes):', timeDifference / (1000 * 60));
       
       if (timeDifference < thirtyMinutes) {
+        console.log('🔍 TIME DEBUG - Times too close, adjusting PM time');
         // Adjust PM time to be at least 30 minutes after AM time
         pmTime = new Date(amTime.getTime() + thirtyMinutes);
         
         // If this pushes PM time past 8 PM, move it to tomorrow
         if (pmTime.getHours() >= 20) {
-          const tomorrow = new Date(today);
+          console.log('🔍 TIME DEBUG - Adjusted PM time past 8 PM, moving to tomorrow');
+          const tomorrow = new Date();
           tomorrow.setDate(today.getDate() + 1);
           const randomPmHour = Math.floor(Math.random() * (pmEndHour - pmStartHour)) + pmStartHour;
           const randomPmMinute = Math.floor(Math.random() * 60);
           tomorrow.setHours(randomPmHour, randomPmMinute, 0, 0);
           pmTime = tomorrow;
+          console.log('🔍 TIME DEBUG - Final adjusted PM time for tomorrow:', pmTime.toLocaleString());
+        } else {
+          console.log('🔍 TIME DEBUG - Final adjusted PM time for today:', pmTime.toLocaleString());
         }
       }
     }
+    
+    console.log('🔍 TIME DEBUG - Final AM time:', amTime?.toLocaleString() || 'null');
+    console.log('🔍 TIME DEBUG - Final PM time:', pmTime?.toLocaleString() || 'null');
+    console.log('🔍 TIME DEBUG - Final AM time Unix:', amTime?.getTime() || 'null');
+    console.log('🔍 TIME DEBUG - Final PM time Unix:', pmTime?.getTime() || 'null');
     
     return { amTime, pmTime };
   }
@@ -357,16 +398,17 @@ class NotificationServiceClass {
       const scheduledDate = reminder.scheduledFor;
       const now = new Date();
 
-      console.log('Scheduling notification for:', scheduledDate.toLocaleString());
-      console.log('Current time:', now.toLocaleString());
-      console.log('Time difference (ms):', scheduledDate.getTime() - now.getTime());
+      console.log('🔔 NOTIFICATION DEBUG - Scheduling notification for:', scheduledDate.toLocaleString());
+      console.log('🔔 NOTIFICATION DEBUG - Current time:', now.toLocaleString());
+      console.log('🔔 NOTIFICATION DEBUG - Time difference (ms):', scheduledDate.getTime() - now.getTime());
+      console.log('🔔 NOTIFICATION DEBUG - Time difference (minutes):', (scheduledDate.getTime() - now.getTime()) / (1000 * 60));
       
       // Enhanced debugging
-      console.log('🔍 DETAILED DEBUG - Scheduled Date ISO:', scheduledDate.toISOString());
-      console.log('🔍 DETAILED DEBUG - Current Date ISO:', now.toISOString());
-      console.log('🔍 DETAILED DEBUG - Time difference (ms):', scheduledDate.getTime() - now.getTime());
-      console.log('🔍 DETAILED DEBUG - Time difference (minutes):', (scheduledDate.getTime() - now.getTime()) / (1000 * 60));
-      console.log('🔍 DETAILED DEBUG - Scheduled Date Local Components:', {
+      console.log('🔔 NOTIFICATION DEBUG - Scheduled Date ISO:', scheduledDate.toISOString());
+      console.log('🔔 NOTIFICATION DEBUG - Current Date ISO:', now.toISOString());
+      console.log('🔔 NOTIFICATION DEBUG - Scheduled Date Unix:', scheduledDate.getTime());
+      console.log('🔔 NOTIFICATION DEBUG - Current Date Unix:', now.getTime());
+      console.log('🔔 NOTIFICATION DEBUG - Scheduled Date Local Components:', {
         year: scheduledDate.getFullYear(),
         month: scheduledDate.getMonth(),
         day: scheduledDate.getDate(),
@@ -376,24 +418,27 @@ class NotificationServiceClass {
       });
       
       if (scheduledDate <= now) {
-        console.warn('Cannot schedule notification for past date:', scheduledDate);
+        console.warn('🔔 NOTIFICATION DEBUG - Cannot schedule notification for past date:', scheduledDate.toLocaleString());
         return null;
       }
 
       // Add buffer to ensure notification is scheduled far enough in the future
       const timeDifferenceMs = scheduledDate.getTime() - now.getTime();
-      const minimumBufferMs = 5000; // 5 seconds
+      const minimumBufferMs = 10000; // 10 seconds buffer
       
       if (timeDifferenceMs < minimumBufferMs) {
-        console.log(`🔍 BUFFER DEBUG - Time difference too small (${timeDifferenceMs}ms), adding buffer`);
+        console.log(`🔔 NOTIFICATION DEBUG - Time difference too small (${timeDifferenceMs}ms), adding buffer`);
         scheduledDate.setTime(now.getTime() + minimumBufferMs);
-        console.log(`🔍 BUFFER DEBUG - Adjusted scheduled time to: ${scheduledDate.toLocaleString()}`);
+        console.log(`🔔 NOTIFICATION DEBUG - Adjusted scheduled time to: ${scheduledDate.toLocaleString()}`);
       } else {
-        console.log(`🔍 BUFFER DEBUG - Time difference sufficient (${timeDifferenceMs}ms), no buffer needed`);
+        console.log(`🔔 NOTIFICATION DEBUG - Time difference sufficient (${timeDifferenceMs}ms), no buffer needed`);
       }
 
-      // Log trigger date and time difference before scheduling
-      console.log('[REM TEST] Trigger date', scheduledDate.toString(), 'ms from now:', scheduledDate.getTime() - Date.now());
+      // Final pre-scheduling debug
+      const finalTimeDiff = scheduledDate.getTime() - Date.now();
+      console.log('🔔 NOTIFICATION DEBUG - FINAL: Trigger date', scheduledDate.toString());
+      console.log('🔔 NOTIFICATION DEBUG - FINAL: ms from now:', finalTimeDiff);
+      console.log('🔔 NOTIFICATION DEBUG - FINAL: minutes from now:', finalTimeDiff / (1000 * 60));
 
       // Create notification content
       const notificationContent: Notifications.NotificationContentInput = {
@@ -418,15 +463,15 @@ class NotificationServiceClass {
         trigger: triggerObject,
       });
 
-      console.log(`Scheduled notification ${notificationId} for reminder ${reminder.id} at ${scheduledDate.toLocaleString()}`);
+      console.log(`🔔 NOTIFICATION DEBUG - Scheduled notification ${notificationId} for reminder ${reminder.id} at ${scheduledDate.toLocaleString()}`);
       
       // Check all scheduled notifications after scheduling
       const allScheduled = await Notifications.getAllScheduledNotificationsAsync();
-      console.log('[REM TEST] scheduled count:', allScheduled.length, allScheduled);
+      console.log('🔔 NOTIFICATION DEBUG - Total scheduled notifications:', allScheduled.length);
       
       // Check for Expo Go limitation
       if (allScheduled.length === 0) {
-        console.warn('Expo Go limitation – use a dev build to test timing');
+        console.warn('🔔 NOTIFICATION DEBUG - Expo Go limitation – use a dev build to test timing');
       }
       
       return notificationId;
